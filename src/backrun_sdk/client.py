@@ -46,6 +46,8 @@ class Client:
             sent_at=datetime.now(timezone.utc).isoformat(),
         )
 
+        print(req)
+
         if args:
             req["args"] = args
         if kwargs:

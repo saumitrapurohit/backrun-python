@@ -1,0 +1,57 @@
+from mock import patch
+from django.test import Client
+
+
+@patch("tests.djtest.author.tasks.author_count")
+def test_run_task(mock_author_count):
+    mock_author_count.return_value = 1
+
+    client = Client()
+    resp = client.post(
+        path="/backrun/",
+        data={
+            "func": "tests.djtest.author.tasks.author_count",
+            "args": [1, 2],
+            "kwargs": {"is_published": True},
+        },
+        content_type="application/json",
+    )
+    mock_author_count.assert_called_once()
+    mock_author_count.assert_called_with(1, 2, is_published=True)
+    assert resp.status_code == 200
+    response = resp.json()
+    assert response["result"] == 1
+    assert response["duration"] > 0
+    assert response["error"] is None
+
+
+def test_run_non_existing_task():
+    client = Client()
+    resp = client.post(
+        path="/backrun/",
+        data={
+            "func": "tests.djtest.author.tasks._random_non_existing_task_",
+            "args": [1, 2],
+            "kwargs": {"is_published": True},
+        },
+        content_type="application/json",
+    )
+    assert resp.status_code == 200
+    response = resp.json()
+    assert response["result"] is None
+    assert response["duration"] > 0
+    assert "has no attribute '_random_non_existing_task_'" in response["error"]
+
+
+def test_run_exception_raiser():
+    client = Client()
+    resp = client.post(
+        path="/backrun/",
+        data={"func": "tests.djtest.author.tasks.exception_raiser"},
+        content_type="application/json",
+    )
+    assert resp.status_code == 200
+    response = resp.json()
+    assert response["result"] is None
+    assert response["duration"] > 0
+    assert "This is an exception from exception_raiser" in response["error"]

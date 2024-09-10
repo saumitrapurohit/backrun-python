@@ -14,10 +14,7 @@ def task(_func=None, *, cron=None):
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except Exception as exc:
-                logger.error("task.failed: %s", str(exc))
+            return func(*args, **kwargs)
 
         def delay(*args, **kwargs):
             client = get_active_client()
