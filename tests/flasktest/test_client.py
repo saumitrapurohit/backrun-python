@@ -1,16 +1,12 @@
 from datetime import datetime, timezone
 
 import orjson
-import pytest
 from mock import patch
 
-from .author.models import Author
-from .author.tasks import author_count
+from .app import author_count
 
 
-@pytest.mark.django_db
 def test_sync_call():
-    Author.objects.create(name="test")
     assert author_count() == 1
 
 
@@ -25,7 +21,7 @@ def test_delay_simple(mock_now, mock_post):
         "/v1/enqueue",
         content=orjson.dumps(
             {
-                "func": "tests.djtest.author.tasks.author_count",
+                "func": "tests.flasktest.app.author_count",
                 "sent_at": now.isoformat(),
             }
         ),
@@ -42,7 +38,7 @@ def test_delay_with_args(mock_now, mock_post):
         "/v1/enqueue",
         content=orjson.dumps(
             {
-                "func": "tests.djtest.author.tasks.author_count",
+                "func": "tests.flasktest.app.author_count",
                 "sent_at": now.isoformat(),
                 "args": [1, 2],
                 "kwargs": {"is_published": True},
@@ -62,7 +58,7 @@ def test_apply_async_simple(mock_now, mock_post):
         "/v1/enqueue",
         content=orjson.dumps(
             {
-                "func": "tests.djtest.author.tasks.author_count",
+                "func": "tests.flasktest.app.author_count",
                 "sent_at": now.isoformat(),
             }
         ),
@@ -80,7 +76,7 @@ def test_apply_async_with_args(mock_now, mock_post):
         "/v1/enqueue",
         content=orjson.dumps(
             {
-                "func": "tests.djtest.author.tasks.author_count",
+                "func": "tests.flasktest.app.author_count",
                 "sent_at": now.isoformat(),
                 "args": [1, 2],
                 "kwargs": {"is_published": True},
